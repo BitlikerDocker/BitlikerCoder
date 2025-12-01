@@ -1,0 +1,66 @@
+name: code-server Build and Push
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Docker image version (e.g., 1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU (for multi-arch builds)
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push to registries
+        id: build
+        uses: docker/build-push-action@v4
+        with:
+          context: ./
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          # enable BuildKit cache via GitHub Actions cache (fast) and optionally push to registry cache
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            # you can pass or override build-time args here
+            GRADLE_VERSION=9.2.1
+            RAR_VERSION=710
+          tags: |
+            ghcr.io/bitliker/code-server:latest
+            ghcr.io/bitliker/code-server:${{ github.event.inputs.version }}
+            bitliker/code-server:latest
+            bitliker/code-server:${{ github.event.inputs.version }}
+
+      - name: Print pushed manifest summary
+        run: |
+          echo "Build and push completed. Tags pushed:"
+          echo "  ghcr.io/bitliker/code-server:${{ github.event.inputs.version }}"
+          echo "  bitliker/code-server:${{ github.event.inputs.version }}"
