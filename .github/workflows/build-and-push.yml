@@ -54,13 +54,13 @@ jobs:
             GRADLE_VERSION=9.2.1
             RAR_VERSION=710
           tags: |
-            ghcr.io/bitliker/code-server:latest
-            ghcr.io/bitliker/code-server:${{ github.event.inputs.version }}
+            ghcr.io/BitlikerDocker/code-server:latest
+            ghcr.io/BitlikerDocker/code-server:${{ github.event.inputs.version }}
             bitliker/code-server:latest
             bitliker/code-server:${{ github.event.inputs.version }}
 
       - name: Print pushed manifest summary
         run: |
           echo "Build and push completed. Tags pushed:"
-          echo "  ghcr.io/bitliker/code-server:${{ github.event.inputs.version }}"
+          echo "  ghcr.io/BitlikerDocker/code-server:${{ github.event.inputs.version }}"
           echo "  bitliker/code-server:${{ github.event.inputs.version }}"
